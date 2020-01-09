@@ -6,6 +6,7 @@ use Epesi\Core\System\Database\Models\Module;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\QueryException;
 use atk4\core\Exception;
+use Illuminate\Support\Facades\File;
 
 class ModuleManager
 {
@@ -82,12 +83,18 @@ class ModuleManager
 	{
 		$ret = collect();
 		foreach (glob($basePath . '/*', GLOB_ONLYDIR|GLOB_NOSORT) as $path) {
-			$moduleNamespace = trim($namespace, '\\') . '\\' . basename($path);
+			$moduleNamespace = trim($namespace, '\\');
+						
+			$subModuleNamespace = $moduleNamespace . '\\' . basename($path);
 			
-			$ret = $ret->merge(self::discoverModuleClasses($moduleNamespace, $path));
+			$ret = $ret->merge(self::discoverModuleClasses($subModuleNamespace, $path));
 			
-			$moduleClass = $moduleNamespace . '\\' . basename($path) . 'Core';
-			
+			$names = array_slice(explode('\\', $moduleNamespace), -1);
+
+			if (! $name = $names? reset($names): '') continue;
+
+			$moduleClass = $moduleNamespace . '\\' . $name . 'Core';
+
 			if (! is_a($moduleClass, ModuleCore::class, true)) continue;
 			
 			$ret->add($moduleClass);
@@ -118,6 +125,8 @@ class ModuleManager
 	public static function clearCache()
 	{
 		self::$installed = null;
+		File::cleanDirectory(base_path('bootstrap/cache'));
+		
 		Cache::forget('epesi-modules-installed');
 		Cache::forget('epesi-modules-available');
 	}
@@ -146,7 +155,7 @@ class ModuleManager
 		$installedModules = self::getInstalled();
 		
 		// if epesi is not installed fake having the system module to enable its functionality
-		if ($installedModules->isEmpty()) {
+		if (! $installedModules->contains(\Epesi\Core\System\SystemCore::class)) {
 			$installedModules = collect([
 				'system' => \Epesi\Core\System\SystemCore::class
 			]);
@@ -167,7 +176,7 @@ class ModuleManager
 	 * 
 	 * @param string $classOrAlias
 	 */
-	public static function install($classOrAlias)
+	public static function install($classOrAlias, $installRecommended = true)
 	{
 		if (self::isInstalled($classOrAlias)) {
 			print ('Module "' . $classOrAlias . '" already installed!');
@@ -204,14 +213,18 @@ class ModuleManager
 				'alias' => $module->alias()
 		]);
 		
-		foreach ($module->recommended() as $recommendedModule) {
-			try {
-				self::install($recommendedModule);
-			} catch (Exception $e) {
-				// just continue, nothing to do if module cannot be installed
-			}			
+		if ($installRecommended) {
+			$installRecommended = is_array($installRecommended)? $installRecommended: $module->recommended();
+			
+			foreach ($installRecommended as $recommendedModule) {
+				try {
+					self::install($recommendedModule);
+				} catch (Exception $e) {
+					// just continue, nothing to do if module cannot be installed
+				}
+			}
 		}
-		
+				
 		self::clearCache();
 		
 		print ('Module ' . $classOrAlias . ' successfully installed!');
@@ -256,6 +269,38 @@ class ModuleManager
 		return collect($moduleClass::requires())->diff(self::getInstalled())->filter()->all();
 	}	
 	
+	public static function listDependencies($moduleClass) {
+		$ret = collect();
+		foreach (collect($moduleClass::requires()) as $parentClass) {
+			$ret->add($parentClass = self::getClass($parentClass));
+			
+			$ret = $ret->merge(self::listDependencies($parentClass));
+		}
+		
+		return $ret->filter()->unique()->all();
+	}
+	
+	public static function listRecommended($moduleClass) {
+		$ret = collect();
+		foreach (collect($moduleClass::recommended()) as $childClass) {
+			$ret->add($childClass = self::getClass($childClass));
+			
+			$ret = $ret->merge(self::listRecommended($childClass));
+		}
+		
+		return $ret->filter()->unique()->all();
+	}
+	
+	public static function listDependents() {
+		$ret = [];
+		foreach (self::getInstalled() as $moduleClass) {
+			foreach ($moduleClass::requires() as $parentClass) {
+				$ret[$parentClass][] = $moduleClass;
+			}
+		}
+		return $ret;
+	}
+	
 	public static function uninstall($classOrAlias)
 	{
 		if (! self::isInstalled($classOrAlias)) {
@@ -266,6 +311,10 @@ class ModuleManager
 		
 		if (! $moduleClass = self::getClass($classOrAlias)) {
 			throw new \Exception('Module "' . $classOrAlias . '" could not be identified');
+		}
+		
+		foreach (self::listDependents()[$moduleClass]?? [] as $childModule) {
+			self::uninstall($childModule);
 		}
 		
 		/**

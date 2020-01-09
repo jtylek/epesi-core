@@ -24,6 +24,16 @@ return [
 				
 				/*
 				 |--------------------------------------------------------------------------
+				 | Epesi favicon
+				 |--------------------------------------------------------------------------
+				 |
+				 | This value is the url to Epesi favicon, null for default (public/favicon.png)
+				 |
+				 */
+				'favicon' => null,
+				
+				/*
+				 |--------------------------------------------------------------------------
 				 | Epesi skin
 				 |--------------------------------------------------------------------------
 				 |
@@ -38,7 +48,6 @@ return [
 							'serialize-object' 	=> 'https://cdnjs.cloudflare.com/ajax/libs/jquery-serialize-object/2.5.0',
 							'semantic-ui'      	=> 'https://cdn.jsdelivr.net/npm/fomantic-ui@2.7.2/dist',
 							'draggable'      	=> 'https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.5/lib',
-							'jquery-ui'      	=> 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.0',
 							'jquery-nicescroll' => 'https://cdnjs.cloudflare.com/ajax/libs/jquery.nicescroll/3.7.6',
 				],
 		],

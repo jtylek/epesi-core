@@ -30,6 +30,13 @@ abstract class ModuleCore
 	 * @var string
 	 */
 	protected static $alias;
+	
+	/**
+	 * Define module label
+	 * 
+	 * @var string
+	 */
+	protected static $label;
 
 	/**
 	 * Module installation method
@@ -37,7 +44,7 @@ abstract class ModuleCore
 	 *
 	 * @return bool - true if installation success, false otherwise
 	 */
-	abstract public function install();
+	public function install() {}
 	
 	/**
 	 * Module uninstallation method
@@ -45,13 +52,20 @@ abstract class ModuleCore
 	 *
 	 * @return bool - true if installation success, false otherwise
 	 */
-	abstract public function uninstall();
+	public function uninstall() {}
 	
 	/**
 	 * Method called at system boot
 	 * Can be used same as service controller boot method
 	 */
 	public static function boot() {}
+	
+	/**
+	 * Label of the module
+	 */
+	public static function label() {
+		return static::$label?: ucwords(str_ireplace('.', ' ', static::alias()));
+	}
 	
 	/**
 	 * Information about the module

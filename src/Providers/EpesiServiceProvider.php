@@ -4,9 +4,11 @@ namespace Epesi\Core\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use Epesi\Core\App;
 use Epesi\Core\System\Integration\Modules\ModuleManager;
 use Epesi\Core\Middleware\NoCacheHeaders;
+use Epesi\Core\Data\Persistence\SQL;
 
 class EpesiServiceProvider extends ServiceProvider
 {
@@ -17,6 +19,8 @@ class EpesiServiceProvider extends ServiceProvider
     {
     	$this->ensureHttps();
     	
+    	if (env('APP_DEBUG', false)) ModuleManager::clearCache();
+    	
     	Route::group(['namespace' => 'Epesi\Core\Controllers', 'middleware' => 'web'], function() {
     		Route::any('/', 'SystemController@index');
     		Route::get('logo', 'SystemController@logo');
@@ -25,7 +29,7 @@ class EpesiServiceProvider extends ServiceProvider
     		Route::group(['middleware' => ['auth', NoCacheHeaders::class]], function() {
     			Route::any('home', 'SystemController@home')->name('home');
     			
-    			Route::any('view/{alias}/{method?}/{args?}', 'ModuleController@view');
+    			Route::any('view/{alias}/{method?}/{args?}', 'SystemController@view');
     		});
     	});
 
@@ -50,6 +54,19 @@ class EpesiServiceProvider extends ServiceProvider
     public function register()
     {
     	$this->app->singleton(App::class);
+    	
+    	$this->app->singleton(
+    			SQL::class,
+    			function ($app) {
+    				/**
+    				 * Database Manager
+    				 *
+    				 * @var \Illuminate\Database\DatabaseManager $db
+    				 */
+    				$db = DB::getFacadeRoot();
+    				
+    				return new SQL($db);
+    			});
     }
     
     /**

@@ -61,6 +61,8 @@ class App extends BaseApp
 		
 		$this->addCsrfToken();
 		
+		$this->addFavIcon();
+		
 // 		$this->enablePjax();
 		
 		ob_start();
@@ -79,37 +81,41 @@ class App extends BaseApp
 // 		$this->requireCSS(asset('css/app.css'));
 				
 		//TODO: include below in app.js and app.css
+		
+		$localJs = url('storage/system/js');
+		$localCss = url('storage/system/css');
+		
 		// jQuery
-		$urlJs = $this->cdn['jquery']?? 'storage/system/js';
+		$urlJs = $this->cdn['jquery']?? $localJs;
 		$this->requireJS($urlJs.'/jquery.min.js');
 		
 		// Semantic UI
-		$urlJs = $this->cdn['semantic-ui']?? 'storage/system/js';
-		$urlCss = $this->cdn['semantic-ui']?? 'storage/system/css';
+		$urlJs = $this->cdn['semantic-ui']?? $localJs;
+		$urlCss = $this->cdn['semantic-ui']?? $localCss;
 		$this->requireJS($urlJs.'/semantic.min.js');
 		$this->requireCSS($urlCss.'/semantic.min.css');
 		
 		// Serialize Object
-		$urlJs = $this->cdn['serialize-object']?? 'storage/system/js';
+		$urlJs = $this->cdn['serialize-object']?? $localJs;
 		$this->requireJS($urlJs.'/jquery.serialize-object.min.js');
 		
 		// Agile UI
-		$urlJs = $this->cdn['atk']?? 'storage/system/js';
-		$urlCss = $this->cdn['atk']?? 'storage/system/css';
+		$urlJs = $this->cdn['atk']?? $localJs;
+		$urlCss = $this->cdn['atk']?? $localCss;
 		$this->requireJS($urlJs.'/atkjs-ui.min.js');
 		$this->requireCSS($urlCss.'/agileui.css');
 		
 		// Draggable
-		$urlJs = $this->cdn['draggable']?? 'storage/system/js';
+		$urlJs = $this->cdn['draggable']?? $localJs;
 		$this->requireJS($urlJs.'/draggable.bundle.js');
 		
-		// jQuery UI	
-		$urlJs = $this->cdn['jquery-ui']?? 'storage/system/js';
-		$this->requireJS($urlJs.'/jquery-ui.js');
-		
 		// jQuery niceScroll	
-		$urlJs = $this->cdn['jquery-nicescroll']?? 'storage/system/js';
+		$urlJs = $this->cdn['jquery-nicescroll']?? $localJs;
 		$this->requireJS($urlJs.'/jquery.nicescroll.js');
+		
+		// clipboard.js
+		$urlJs = $this->cdn['clipboardjs']?? $localJs;
+		$this->requireJS($urlJs.'/clipboard.js');
 	}
 	
 	public function addCsrfToken()
@@ -123,35 +129,40 @@ class App extends BaseApp
 		})');
 	}
 	
+	public function addFavIcon()
+	{
+		$this->html->template->appendHTML('HEAD', $this->getTag('link', ['rel' => 'shortcut icon', 'href' => config('epesi.app.favicon', url('favicon.png'))]));
+	}
+	
 	public function enablePjax()
 	{
 		// pjax library
-		$this->requireJS('https://cdn.jsdelivr.net/npm/pjax/pjax.js');
+// 		$this->requireJS('https://cdn.jsdelivr.net/npm/pjax/pjax.js');
 		
-		$this->html->template->appendHTML('HEAD', '<script>
-			$(function(){
-				var pjax = new Pjax({
-						"elements": ".pjax", 
-						"selectors": [".atk-layout", "head > script[page-pjax]", "head > title"]
-				});
-			});
-			
-		</script>');
-		
-		// pjax-api library
-// 		$this->requireJS('https://cdn.jsdelivr.net/npm/pjax-api@latest');
-
 // 		$this->html->template->appendHTML('HEAD', '<script>
-
-// 			$(function(){		
-// 				const { Pjax } = require("pjax-api");		
-// 				new Pjax({
-// 						"links": ".pjax", 
-// 						"areas": [".atk-layout", "head > script[page-pjax]", "head > title"]
+// 			$(function(){
+// 				var pjax = new Pjax({
+// 						"elements": ".pjax", 
+// 						"selectors": [".atk-layout", "head > script[page-pjax]", "head > title"]
 // 				});
 // 			});
 			
 // 		</script>');
+		
+		// pjax-api library
+		$this->requireJS('https://cdn.jsdelivr.net/npm/pjax-api@latest');
+
+		$this->html->template->appendHTML('HEAD', '<script>
+
+			$(function(){		
+				const { Pjax } = require("pjax-api");		
+				new Pjax({
+						"links": ".pjax", 
+						"areas": [".atk-layout", "head > script[page-pjax]", "head > title"]
+				});
+			});
+			
+		</script>');
 
 		// common
 		$this->addJs('$(".pjax").click(function(e) {

@@ -16,7 +16,12 @@
 }
 
 .atk-mainContainer {
-	padding-top: 2em;
+	padding-top: 0.5em;
+}
+
+.ui.atk-overflow-auto {
+	background: #fff;
+    box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
 }
 
 .ui.menu .epesi-logo.item {
@@ -50,17 +55,27 @@
 }
 
 .launch.button {
-	width: 6em;
-	height: 6em;
+	width: auto;
+	height: 90px;
+	display: inline-flex;
 }
 
 .ui.launch.icon.button i.icon {
 	font-size: 2em;
-	margin: 10px auto 0px auto !important;
+	margin: 15px auto 0px auto !important;
 }
 
 .launch.button span {
 	display: inline-flex;
+	width: min-content;
+    min-width: 5em;
+    margin: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.atk-ActionBarWrapper {
+	display: inline-block;	
 }
 
 .actionbar.segment {
