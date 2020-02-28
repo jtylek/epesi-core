@@ -2,7 +2,7 @@
 
 namespace Epesi\Core\System\Logo;
 
-use Epesi\Core\System\Integration\Modules\ModuleCore;
+use Epesi\Core\System\Modules\ModuleCore;
 
 class LogoCore extends ModuleCore
 {
@@ -17,6 +17,6 @@ class LogoCore extends ModuleCore
 	public static function boot()
 	{
 		// dynamically set the page title based on GUI setting
-		config(['epesi.app.title' => LogoSettings::getTitle()]);
+		config(['epesi.ui.title' => LogoSettings::getTitle()]);
 	}
 }

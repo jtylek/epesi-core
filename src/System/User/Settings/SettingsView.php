@@ -2,10 +2,10 @@
 
 namespace Epesi\Core\System\User\Settings;
 
-use Epesi\Core\System\Integration\Modules\ModuleView;
+use Epesi\Core\System\Modules\ModuleView;
 use Epesi\Core\System\User\Settings\Integration\Joints\UserSettingsJoint;
-use Epesi\Core\System\Seeds\Form;
-use Epesi\Core\Layout\Seeds\ActionBar;
+use Epesi\Core\System\View\Form;
+use Epesi\Core\Layout\View\ActionBar;
 use Epesi\Core\System\User\Settings\Database\Models\UserSetting;
 
 class SettingsView extends ModuleView
@@ -29,19 +29,19 @@ class SettingsView extends ModuleView
 		
 		$this->location($joint->label());
 		
-		$form = $this->add(new Form())
-			->addElements($joint->elements())
-			->confirmLeave()
-			->setValues(UserSetting::getGroup($joint->group()));
+		$form = $this->add(new Form());
+		$form->addElements($joint->elements());
+		$form->confirmLeave();
+		$form->model->set(UserSetting::getGroup($joint->group()));
 
 		$form->validate(function(Form $form) use ($joint) {
-			UserSetting::putGroup($joint->group(), $form->getValues());
+			UserSetting::putGroup($joint->group(), $form->model->get());
 			
 			return $form->notify(__('Settings saved!'));
 		});
 		
-		ActionBar::addButton('back');
+		ActionBar::addItemButton('back');
 			
-		ActionBar::addButton('save')->on('click', $form->submit());
+		ActionBar::addItemButton('save')->on('click', $form->submit());
 	}
 }

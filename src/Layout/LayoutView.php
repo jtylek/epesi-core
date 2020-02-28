@@ -4,7 +4,7 @@ namespace Epesi\Core\Layout;
 
 use atk4\ui\jQuery;
 use Illuminate\Support\Arr;
-use Epesi\Core\System\Integration\Modules\ModuleView;
+use Epesi\Core\System\Modules\ModuleView;
 
 /**
  * Implements a classic 100% width admin layout.
@@ -61,7 +61,7 @@ class LayoutView extends ModuleView
         
         $this->setVersion();
         
-        $this->js(true, null, 'body')->niceScroll();
+//         $this->js(true, null, 'body')->niceScroll();
         
 //         $this->js(true, null, new jsExpression('window'))->on('pageshow', new jsFunction(['event'], [
 //         			new jsExpression('
@@ -77,7 +77,7 @@ class LayoutView extends ModuleView
         $this->menu = $this->add(['Menu', 'atk-topMenu fixed horizontal', 'element' => 'header'], 'TopMenu');
 
         // company logo
-        // see Epesi\Core\Controllers\SystemController::logo
+        // see \Epesi\Core\Controller::logo
         $this->menu->add(['class' => ['epesi-logo'], 'style' => ['width' =>  '167px']])->add(['Image', url('logo')])->setStyle(['max-height' => '32px']);
         
         if ($this->burger) {
@@ -86,7 +86,7 @@ class LayoutView extends ModuleView
         }
        	
 		// home icon redirects to /home path 
-		// see Epesi\Core\Controllers\SystemController::home
+		// see \Epesi\Core\Controller::home
         $this->menu->addItem(['class' => ['icon epesi-home']], url('home'))->add(['Icon', 'home']);
 
 		// location bar
@@ -98,16 +98,20 @@ class LayoutView extends ModuleView
 		$this->location = $crumbs;
 
 		$crumb = $this->locationBar->add('BreadCrumb');
+		
+		$title = [];
 		foreach ($crumbs as $level) {
 			$label = $level['label']?? $level;
 			$link = $level['link']?? null;
 			
 			$crumb->addCrumb($label, $link);
+			
+			$title[] = $label;
 		}
 
 		$crumb->popTitle();
 		
-		$this->app->title = implode(' > ', Arr::prepend($crumbs, config('epesi.app.title', 'EPESI')));
+		$this->app->title = implode(' > ', Arr::prepend($title, config('epesi.ui.title', 'EPESI')));
 		
 		return $this;
 	}
@@ -121,7 +125,7 @@ class LayoutView extends ModuleView
 	{
 		if ($this->menuRight) return;
 
-		$this->menuRight = $this->menu->add(new Seeds\RightMenu([
+		$this->menuRight = $this->menu->add(new View\RightMenu([
 				'ui' => false
 		]), 'RightMenu')->addClass('right menu')->removeClass('item');
 	}
@@ -130,7 +134,7 @@ class LayoutView extends ModuleView
     {
         if ($this->menuLeft) return;
         
-        $this->menuLeft = $this->add(new Seeds\NavMenu('left vertical labeled sidebar'), 'LeftMenu');
+        $this->menuLeft = $this->add(new View\NavMenu('left vertical labeled sidebar'), 'LeftMenu');
 
         if (! $this->burger) return;
 
@@ -152,8 +156,8 @@ class LayoutView extends ModuleView
     public function setActionBar()
     {
     	if ($this->actionBar) return;
-    	
-    	$this->actionBar = $this->add(new Seeds\ActionBar(), 'ActionBar');
+
+    	$this->actionBar = $this->add(View\ActionBar::class, 'ActionBar');
     }
     
     public function setVersion()

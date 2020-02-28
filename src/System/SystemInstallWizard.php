@@ -2,13 +2,13 @@
 
 namespace Epesi\Core\System;
 
-use Epesi\Core\System\Seeds\Form;
+use Epesi\Core\System\View\Form;
 use atk4\ui\jsExpression;
 use atk4\ui\Wizard;
 use Illuminate\Support\Facades\Artisan;
-use Epesi\Core\System\Integration\Modules\Concerns\HasAdminMode;
+use Epesi\Core\System\Modules\Concerns\HasAdminMode;
 use Illuminate\Support\Facades\App;
-use Epesi\Core\System\Integration\Modules\ModuleManager;
+use Epesi\Core\System\Modules\ModuleManager;
 use Epesi\Core\System\User\Database\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -38,7 +38,7 @@ class SystemInstallWizard extends Wizard
 		$this->addStep([__('Complete'), 'icon'=>'check', 'description'=>__('Complete installation')], [__CLASS__, 'stepInstallationCompleted']);
 		
 		// below step is skipped because of redirecting to 'login' path once system installed
-		// see Epesi\Core\Controllers\SystemController::install
+		// see \Epesi\Core\Controller::install
 		$this->addFinish([__CLASS__, 'stepInstallationCompleted']);
 	}
 	
@@ -99,17 +99,17 @@ class SystemInstallWizard extends Wizard
 		
 		$license->js(true)->niceScroll();
 		
-		$license->template->setHTML('epesi', config('epesi.app.title'));
+		$license->template->setHTML('epesi', config('epesi.ui.title'));
 		
-		$license->template->setHTML('copyright', config('epesi.app.copyright'));
+		$license->template->setHTML('copyright', config('epesi.ui.copyright'));
 		
 		$column = $columns->addColumn();
 		
 		$form = $column->add(new Form());
 		$form->addField('copyright', ['CheckBox', 'caption' => __('I will not remove the Copyright notice as required by the MIT license.')], ['required'=>true]);
-		$form->addField('logo', ['CheckBox', 'caption' => __('I will not remove ":epesi powered" logo and the link from the application login screen or the toolbar.', ['epesi' => config('epesi.app.title')])], ['required'=>true]);
+		$form->addField('logo', ['CheckBox', 'caption' => __('I will not remove ":epesi powered" logo and the link from the application login screen or the toolbar.', ['epesi' => config('epesi.ui.title')])], ['required'=>true]);
 		$form->addField('support', ['CheckBox', 'caption' => __('I will not remove "Support -> About" credit page from the application menu.')], ['required'=>true]);
-		$form->addField('store', ['CheckBox', 'caption' => __('I will not remove or rename ":epesi Store" links from the application.', ['epesi' => config('epesi.app.title')])], ['required'=>true]);
+		$form->addField('store', ['CheckBox', 'caption' => __('I will not remove or rename ":epesi Store" links from the application.', ['epesi' => config('epesi.ui.title')])], ['required'=>true]);
 		
 		$form->onSubmit(function ($form) use ($wizard) {
 			return $wizard->jsNext();
@@ -190,7 +190,7 @@ class SystemInstallWizard extends Wizard
 				'prompt' => __('Password mismatch')
 		]]);
 		
-		$form->setValues($wizard->recall('user'));
+		$form->model->set($wizard->recall('user'));
 		
 		$form->validate(function ($form) use ($wizard) {
 			$wizard->memorize('user', $form->model->get());
@@ -202,7 +202,7 @@ class SystemInstallWizard extends Wizard
 	public static function stepInstallationCompleted($wizard)
 	{
 		Artisan::call('migrate');
-		
+
 		ob_start();
 		ModuleManager::install('system');
 		ob_end_clean();
@@ -218,7 +218,7 @@ class SystemInstallWizard extends Wizard
 				'password' => Hash::make($user['password']),
 		])->assignRole('Super Admin');
 		
-		$wizard->add(['Header', __(':epesi was successfully installed!', ['epesi' => config('epesi.app.title')]), 'huge centered']);
+		$wizard->add(['Header', __(':epesi was successfully installed!', ['epesi' => config('epesi.ui.title')]), 'huge centered']);
 	}
 
 	public static function getDisplayLanguages() {
